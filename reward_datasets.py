@@ -27,7 +27,7 @@ def get_data_iter(data_list, debug=False):
     else:
         return data_list
 
-def reward_data_collactor(batch):
+def reward_data_collator(batch):
     scores = []
     input_ids = []
     attention_mask = []
@@ -43,7 +43,7 @@ def reward_data_collactor(batch):
         }
     return full_batch
 
-def more_data_collactor_without_resampling(batch):
+def more_data_collator_without_resampling(batch):
     # full batch
     scores = []
     input_ids = []
@@ -60,7 +60,7 @@ def more_data_collactor_without_resampling(batch):
         }
     return full_batch, task_mask
 
-def more_data_collactor(batch):
+def more_data_collator(batch):
     # interleaves
     num_task = len(batch[0])
     batch_list = []
@@ -174,7 +174,6 @@ def load_json_data(data_path):
     print_rank_0("loading text-score dataset from: \n   {}".format(data_path))
     with open(data_path, "r") as f:
         data_list = json.load(f)
-
     return data_list
 
 def load_text_score_dataset(data_path, tokenizer=None, debug=False, padding=False):

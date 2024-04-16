@@ -13,13 +13,13 @@ from transformers import Trainer, AutoConfig
 from transformers import EvalPrediction
 
 
-from model import LlamaRewardModel, PythiaRewardModel
+from model import LlamaRewardModel, BertRewardModel, PythiaRewardModel
 from utils import print_rank_0
-from reward_datasets import TextRewardDataset, MultiRewardTextDataset, reward_data_collactor, more_data_collactor, more_data_collactor_without_resampling
+from reward_datasets import TextRewardDataset, MultiRewardTextDataset, reward_data_collator, more_data_collator, more_data_collator_without_resampling
 from reward_datasets import load_text_score_dataset
 from arguments import CustomTrainingArguments
 from trainer import RewardModelTrainer
-from trainer_utils import compute_metrics
+from trainer_utils import compute_metrics, compute_metrics_output_logits
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -80,7 +80,10 @@ def train():
             args.model_name_or_path,
             cache_dir=args.cache_dir,)
     else:
-        ...
+        model = BertRewardModel.from_pretrained(
+            args.model_name_or_path,
+            cache_dir=args.cache_dir,
+        )
 
     print_rank_0(model)
     print_rank_0(f"Finished loading model from {args.model_name_or_path}")
@@ -88,6 +91,14 @@ def train():
     model.is_parallelizable = True
     model.model_parallel = True
 
+    # active_modules = args.active_module_name.split(',')
+    # for name, param in model.named_parameters():
+    #     if any(nd in name for nd in active_modules) and "lm_head" not in name:
+    #         param.requires_grad = True
+    #         print_rank_0(f"layer {name} activated")
+    #     else:
+    #         param.requires_grad = False
+    #         print_rank_0(f"layer {name} freezed")
     # setup tokenizer
     #---------------------------------------------------------------------------------
     tokenizer = transformers.AutoTokenizer.from_pretrained(
@@ -115,19 +126,19 @@ def train():
     #---------------------------------------------------------------------------------
     if args.more:
         if args.resampling:
-            collactor = more_data_collactor
+            collator = more_data_collator
         else:
-            collactor = more_data_collactor_without_resampling
+            collator = more_data_collator_without_resampling
     else:
-        collactor = reward_data_collactor
+        collator = reward_data_collator
     trainer = RewardModelTrainer(
         model=model, 
         tokenizer=tokenizer, 
         args=args,
-        compute_metrics=compute_metrics,
+        compute_metrics=compute_metrics if args.do_train else compute_metrics_output_logits,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset_dict,
-        data_collator=collactor,
+        data_collator=collator,
     )
     if args.gradient_checkpointing:
         model.config.use_cache = False
@@ -156,10 +167,18 @@ def train():
 
     final_eval_results ={}
     for eval_set_name, eval_dataset in eval_dataset_dict.items():
-        eval_result = trainer.evaluate(eval_dataset=eval_dataset, metric_key_prefix="eval_"+eval_set_name)
+        metric_key_prefix="eval_"+eval_set_name.split('/')[-1]
+        eval_result = trainer.evaluate(eval_dataset=eval_dataset, metric_key_prefix=metric_key_prefix)
+        if trainer.compute_metrics is compute_metrics_output_logits:
+            if not os.path.exists(f"{args.output_dir}/reward_logs"):
+                os.makedirs(f"{args.output_dir}/reward_logs", exist_ok=True)
+            logits_data = eval_result.pop(f"{metric_key_prefix}_logits_data")
+            # diff_mask = eval_result.pop(f"{metric_key_prefix}_scores")
+            with open(f"{args.output_dir}/reward_logs/testdata-{eval_set_name.split('/')[-1]}.json", 'w') as f:
+                json.dump(logits_data, f, ensure_ascii=False)
         print_rank_0(eval_result)
         final_eval_results[eval_set_name] = eval_result
-
+        
     with open(f"{args.output_dir}/final_eval_results.json", 'w') as f:
         json.dump(final_eval_results, f, ensure_ascii=False)
 

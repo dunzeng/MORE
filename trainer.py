@@ -25,7 +25,7 @@ from utils import print_rank_0
 from min_norm_solvers import MinNormSolver
 import numpy as np
 
-from reward_datasets import reward_data_collactor, more_data_collactor
+from reward_datasets import reward_data_collator, more_data_collator
 from sklearn.calibration import calibration_curve
 from utils import gradient_normalizer, print_rank_0, calibration_error, numpy_sigmoid
 from trainer_utils import compute_metrics, calibration_curve, language_modeling_loss, more_batch_creator
@@ -131,8 +131,10 @@ def deserialize_model_parameters(model, params_vector):
 class RewardModelTrainer(Trainer):
     def init_multiobj(self):
         self.lambda_ = np.ones_like(self.args.task_num) / self.args.task_num
+
         self.more_base = nn.Linear(self.model.config.hidden_size, 1, bias=False).cpu()
         # self.grad_m = [torch.zeros_like(self.more_base.weight.data.view(-1)) for i in range(self.args.task_num)]
+
         # self.more_base = copy_last_layers(self.model, 1)
         self.grad_m = [
             serialize_model_parameters(self.more_base).detach().cpu()
@@ -332,9 +334,9 @@ class RewardModelTrainer(Trainer):
 
     def get_eval_dataloader(self, eval_dataset) -> DataLoader:
         if self.args.more:
-            self.data_collator = reward_data_collactor
+            self.data_collator = reward_data_collator
             tmp = super().get_eval_dataloader(eval_dataset)
-            self.data_collator = more_data_collactor
+            self.data_collator = more_data_collator
             return tmp
         else:
             return super().get_eval_dataloader(eval_dataset)

@@ -6,6 +6,10 @@ from transformers import TrainingArguments
 
 @dataclass
 class CustomTrainingArguments(TrainingArguments):
+    # experiment setups
+    reward_domain: str = field(
+        default="normal", metadata={"help": "the domain for reward model training."}
+    )
     # tokenizer params
     padding_side: str = field(
         default="right",
@@ -55,17 +59,17 @@ class CustomTrainingArguments(TrainingArguments):
     )
 
     train_data_path: List[str] = field(
-        default_factory=lambda: ["./pm_data/"],
+        default_factory=lambda: ["./data/"],
         metadata={"help": "train datasets paths."},
     )
 
     eval_data_path: List[str] = field(
-        default_factory=lambda: ["./pm_data/"],
+        default_factory=lambda: ["./data/"],
         metadata={"help": "evaluation datasets paths."},
     )
 
     data_prefix: str = field(
-        default="yahma/alpaca-cleaned",
+        default="",
         metadata={"help": "the prefix to load train and test data."},
     )
 
@@ -91,10 +95,6 @@ class CustomTrainingArguments(TrainingArguments):
         default=False, metadata={"help": "method of hybrid datasets"}
     )
 
-    augment_rate: Optional[float] = field(
-        default=0.1, metadata={"help": "method of hybrid datasets"}
-    )
-
     shuffle: Optional[bool] = field(default=False, metadata={"help": "shuffle hybrid"})
 
     resampling_size: Optional[int] = field(
@@ -104,17 +104,17 @@ class CustomTrainingArguments(TrainingArguments):
         default=False, metadata={"help": "shuffle hybrid"}
     )
 
-    # MORE optimization
+    # multi objective optimization
     run_more: Optional[bool] = field(default=False, metadata={"help": "if start more"})
 
     more: Optional[bool] = field(
-        default=False, metadata={"help": "MORE configuration"}
+        default=False, metadata={"help": "multi objective mode"}
     )
     normalize: Optional[str] = field(
-        default="none", metadata={"help": "MORE configuration"}
+        default="none", metadata={"help": "multi objective mode"}
     )
     reweight: Optional[bool] = field(
-        default=True, metadata={"help": "MORE configuration"}
+        default=True, metadata={"help": "multi objective mode"}
     )
     alpha: Optional[float] = field(default=1, metadata={"help": "lambda momentum"})
     task_num: Optional[int] = field(
@@ -122,13 +122,14 @@ class CustomTrainingArguments(TrainingArguments):
     )
 
     calibration: Optional[bool] = field(
-        default=False, metadata={"help": "MORE configuration"}
+        default=False, metadata={"help": "multi objective mode"}
     )
 
-    # calibration_bins: Optional[list] = field(default=[5,10,20], metadata={"help": "MORE configuration"})
+    # calibration_bins: Optional[list] = field(default=[5,10,20], metadata={"help": "multi objective mode"})
+
     # efficient
     active_module_name: Optional[str] = field(
-        default="none", metadata={"help": "MORE configuration"}
+        default="none", metadata={"help": "multi objective mode"}
     )
 
     contrast_loss_coeff: float = field(
@@ -146,6 +147,13 @@ class CustomTrainingArguments(TrainingArguments):
 
     batch_size: int = field(
         default=256, metadata={"help": "the overall training batch size"}
+    )
+
+    micro_batch_size: int = field(
+        default=32,
+        metadata={
+            "help": "the batch size on each device, equavilent to `per_gpu_train_batch_size`"
+        },
     )
 
     valid_data_size: int = field(
@@ -170,4 +178,27 @@ class CustomTrainingArguments(TrainingArguments):
     )
     report_to: str = field(
         default="tensorboard", metadata={"help": "the directory to save logs."}
+    )
+
+    sep_token: Optional[str] = field(
+        default="<sep>",
+        metadata={
+            "help": "the token that can use to seperate the query and answer in text"
+        },
+    )
+
+    only_predict_answer: Optional[bool] = field(
+        default=True, metadata={"help": "Only predict the answer."}
+    )
+
+    pad_labels_with_ignore: Optional[bool] = field(
+        default=False, metadata={"help": "Whether use ignore token to pad labels."}
+    )
+
+    ignore_token_id: Optional[int] = field(
+        default=-100, metadata={"help": "token id used to inplace query ids."}
+    )
+
+    beta: Optional[float] = field(
+        default=0.1, metadata={"help": "token id used to inplace query ids."}
     )

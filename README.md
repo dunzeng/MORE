@@ -1,4 +1,4 @@
-# MORE
+# MORE (Multi-objective Reward Modeling)
 
 [![Code License](https://img.shields.io/badge/Code%20License-Apache_2.0-green.svg)](https://github.com/Linear95/DSP/blob/main/LICENSE)
 [![Data License](https://img.shields.io/badge/Data%20License-CC%20By%20NC%204.0-red.svg)](https://github.com/Linear95/DSP/blob/main/DATA_LICENSE)
@@ -21,7 +21,7 @@ Please download [data.zip](https://drive.google.com/drive/folders/10Mja3DRiXrFrp
 
 ## Run
 
-Our experiments consists of 5 main steps:
+Our experiments consist of 5 main steps:
 
 ### 1. Reward model training
 ```
@@ -81,9 +81,9 @@ deepspeed --num_gpus 8 train.py \
 
 Note:
 
-- Set `--more False` and change `per_device_train_batch_size` from 1 to 5 for running `MultiTask` baseline.
+- Set `--more False` and change `per_device_train_batch_size` from 1 to 5 for running the `MultiTask` baseline.
 - `--resampling True` will sample data samples from raw datasets. The number of data samples (each preference dataset) will be `resampling_size`.
-- `--alpha` is the momentum parameter for stablizing optimization. Please see `trainer.py` or [paper](https://arxiv.org/pdf/2310.02702.pdf).
+- `--alpha` is the momentum parameter for stabilizing optimization. Please see `trainer.py` or [paper](https://arxiv.org/pdf/2310.02702.pdf).
 
 ### 2. Reject Sampling Inference
 

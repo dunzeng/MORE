@@ -174,7 +174,7 @@ Please cite our paper if you found the code useful.
 ```
 @article{zeng2023diverse,
   title={On Diversified Preferences of Large Language Model Alignment},
-  author={Zeng, Dun and Dai, Yong and Cheng, Pengyu and Hu, Tianhao and Chen, Wanshun and Du, Nan and Xu, Zenglin},
+  author={Zeng, Dun and Dai, Yong and Cheng, Pengyu and Wang, Longyue and Hu, Tianhao and Chen, Wanshun and Du, Nan and Xu, Zenglin},
   journal={arXiv preprint arXiv:2312.07401},
   year={2023}
 }
